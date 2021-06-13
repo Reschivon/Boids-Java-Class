@@ -3,9 +3,9 @@ import java.awt.*;
 import java.util.ArrayList;
 
 public class ModdedPanel extends JPanel {
-    ArrayList<Boid> boids = new ArrayList<>();
+    ArrayList<Boid> boids;
 
-    public ModdedPanel( ArrayList<Boid> boids){
+    public ModdedPanel(ArrayList<Boid> boids){
         this.boids = boids;
     }
 

@@ -8,7 +8,7 @@ public class Boids {
 
         JFrame window = new JFrame("Boids Apocalypse");
         ModdedPanel canvas = new ModdedPanel(boids);
-        canvas.setBackground(new Color(160, 200, 200));
+        canvas.setBackground(new Color(170, 200, 220));
 
         window.add(canvas);
 
@@ -21,8 +21,8 @@ public class Boids {
         while (true){
             Thread.sleep(10);
 
-            for(Boid goon : boids)
-                goon.update();
+            for(Boid boid : boids)
+                boid.update();
 
             canvas.repaint();
         }

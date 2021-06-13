@@ -1,11 +1,9 @@
 import java.awt.*;
-import java.awt.geom.AffineTransform;
 import java.util.List;
 
 public class Boid {
     double x, y, speedX, speedY;
     List<Boid> allBoids;
-    Polygon shape = new Polygon();
 
     public Boid(double x, double y, List<Boid> allBoids){
         this.x = x;
@@ -15,49 +13,54 @@ public class Boid {
         speedY = Math.random() * 3 - 1.5;
 
         this.allBoids = allBoids;
-
-        shape.addPoint(0, 7);
-        shape.addPoint(-6, -8);
-        shape.addPoint(6, -8);
     }
 
     void update() {
-        double centerOfMassX = 0, centerOfMassY = 0;
-        double averageDx = 0, averageDy = 0;
+        // move to center (cohesion)
+        double xSum = 0, ySum = 0;
         double numNeighbors = 0;
-
         for (Boid buddy : allBoids) {
-            double buddyDistance = Math.hypot(buddy.x - x, buddy.y - y);
-
-            if (buddyDistance < 50 && buddyDistance > 0.01) {
-                centerOfMassX += buddy.x;
-                centerOfMassY += buddy.y;
-
-                averageDx += buddy.speedX;
-                averageDy += buddy.speedY;
+            if (Math.hypot(buddy.x - x, buddy.y - y) < 43) {
+                xSum += buddy.x;
+                ySum += buddy.y;
                 numNeighbors++;
-            }
-
-            // move away from very close neighbors (separation)
-            if (buddyDistance < 17 && buddyDistance > 0.01) {
-                speedX -= (buddy.x - x) * 0.05 * 1/buddyDistance;
-                speedY -= (buddy.y - y) * 0.05 * 1/buddyDistance;
             }
         }
 
-        centerOfMassX /= numNeighbors;
-        centerOfMassY /= numNeighbors;
+        double averageX = xSum / numNeighbors;
+        double averageY = ySum / numNeighbors;
 
-        averageDx /= numNeighbors;
-        averageDy /= numNeighbors;
+        speedX = speedX + (averageX - x) * 0.003;
+        speedY = speedY + (averageY - y) * 0.003;
 
-        // move to center (cohesion)
-        speedX += (centerOfMassX - x) * 0.001;
-        speedY += (centerOfMassY - y) * 0.001;
 
         // move at same speed and direction (alignment)
-        speedX += (averageDx - speedX) * 0.005;
-        speedY += (averageDy - speedY) * 0.005;
+        double speedXSum = 0, speedYSum = 0;
+        numNeighbors = 0;
+        for (Boid buddy : allBoids) {
+            if (Math.hypot(buddy.x - x, buddy.y - y) < 43) {
+                speedXSum += buddy.speedX;
+                speedYSum += buddy.speedY;
+                numNeighbors++;
+            }
+        }
+        double averageSpeedX = speedXSum / numNeighbors;
+        double averageSpeedY = speedYSum / numNeighbors;
+
+        speedX = speedX + (averageSpeedX - speedX) * 0.005;
+        speedY = speedY + (averageSpeedY - speedY) * 0.005;
+
+
+
+        // move away from very close neighbors (separation)
+        for (Boid buddy : allBoids) {
+            if (Math.hypot(buddy.x - x, buddy.y - y) < 17) {
+                speedX -= (buddy.x - x) * 0.003;
+                speedY -= (buddy.y - y) * 0.003;
+            }
+        }
+
+
 
         // limit speed
         double speed = Math.hypot(speedY, speedX);
@@ -66,9 +69,11 @@ public class Boid {
             speedY *= 5 / speed;
         }
 
+        // actually move
         x += speedX;
         y += speedY;
 
+        // push boids away from edges
         if(x < 130)
             speedX += 0.1;
         if(y < 60)
@@ -80,25 +85,12 @@ public class Boid {
     }
 
     void draw(Graphics g){
-        Graphics2D g2D = (Graphics2D)g;
-        AffineTransform old = g2D.getTransform();
-
-        double heading = Math.atan2(speedY, speedX) - Math.PI/2;
-        g2D.rotate(heading, x, y);
-        shape.translate((int) x, (int) y);
-
-        g2D.setColor(
+        g.setColor(
                 new Color(limit(254, speedX * 42 + 128),
                           limit(254, speedY * 42 + 128),
-                        100));
+                        120));
 
-        g2D.fillPolygon(shape);
-        g2D.setColor(g2D.getColor().brighter());
-        g2D.drawPolygon(shape);
-
-        shape.translate((int) -x, (int) -y);
-        g2D.setTransform(old);
-
+        g.fillOval((int) x, (int) y, 10, 10);
     }
 
     int limit(int limit, double num){
